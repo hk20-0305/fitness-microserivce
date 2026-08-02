@@ -48,7 +48,7 @@ public class ActivityAIService {
 
             JsonNode analysisJson = mapper.readTree(jsonContent);
             JsonNode analysisNode = analysisJson.path("analysis");
-            
+
             StringBuilder fullAnalysis = new StringBuilder();
             addAnalysisSection(fullAnalysis, analysisNode, "overall", "Overall:");
             addAnalysisSection(fullAnalysis, analysisNode, "pace", "Pace:");
@@ -69,7 +69,7 @@ public class ActivityAIService {
                     .safety(safety)
                     .createdAt(LocalDateTime.now())
                     .build();
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             return createDefaultRecommendation(activity);
@@ -172,7 +172,7 @@ public class ActivityAIService {
         Duration: %d minutes
         Calories Burned: %d
         Additional Metrics: %s
-        
+
         Provide detailed analysis focusing on performance, improvements, next workout suggestions, and safety guidelines.
         Ensure the response follows the EXACT JSON format shown above.
         """,

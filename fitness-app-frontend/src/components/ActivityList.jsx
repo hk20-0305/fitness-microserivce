@@ -22,7 +22,7 @@ const ActivityList = () => {
   return (
     <Grid2 container spacing={2}>
       {activities.map((activity) => (
-        <Grid2 container spacing={{ xs: 2, md: 3 }} columns={{ xs: 4, sm: 8, md: 12 }}>
+        <Grid2 size={{ xs: 12, sm: 6, md: 4 }} key={activity.id}>
             <Card sx={{cursor: 'pointer'}}
             onClick= {() => navigate(`/activities/${activity.id}`)}>
                 <CardContent>

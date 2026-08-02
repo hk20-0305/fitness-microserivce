@@ -10,13 +10,13 @@ import ActivityDetail from "./components/ActivityDetail";
 
 const ActvitiesPage = () => {
   return (<Box sx={{ p: 2, border: '1px dashed grey' }}>
-    <ActivityForm onActivitiesAdded = {() => window.location.reload()} />
+    <ActivityForm onActivityAdded = {() => window.location.reload()} />
     <ActivityList />
   </Box>);
 }
 
 function App() {
-  const { token, tokenData, logIn, logOut, isAuthenticated } = useContext(AuthContext);
+  const { token, tokenData, logIn, logOut, isAuthenticated, error } = useContext(AuthContext);
   const dispatch = useDispatch();
   const [authReady, setAuthReady] = useState(false);
   
@@ -38,6 +38,7 @@ function App() {
         alignItems: "center",
         justifyContent: "center",
         textAlign: "center",
+        p: 2,
       }}
     >
       <Typography variant="h4" gutterBottom>
@@ -46,6 +47,11 @@ function App() {
       <Typography variant="subtitle1" sx={{ mb: 3 }}>
         Please login to access your activities
       </Typography>
+      {error && (
+        <Typography color="error" sx={{ mb: 2, maxWidth: 500 }}>
+          Authentication error: {error}
+        </Typography>
+      )}
       <Button variant="contained" color="primary" size="large" onClick={() => {
                 logIn();
               }}>

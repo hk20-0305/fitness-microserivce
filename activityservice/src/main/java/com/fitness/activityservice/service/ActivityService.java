@@ -46,7 +46,7 @@ public class ActivityService {
 
         Activity savedActivity = activityRepository.save(activity);
 
-        // Publish to RabbitMQ for AI Processing
+//         Publish to RabbitMQ for AI Processing
         try {
             rabbitTemplate.convertAndSend(exchange, routingKey, savedActivity);
         } catch(Exception e) {

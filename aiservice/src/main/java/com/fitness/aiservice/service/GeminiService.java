@@ -9,6 +9,7 @@ import java.util.Map;
 @Service
 public class GeminiService {
 
+
     private final WebClient webClient;
 
     @Value("${gemini.api.url}")
@@ -31,13 +32,12 @@ public class GeminiService {
         );
 
         String response = webClient.post()
-                .uri(geminiApiUrl + geminiApiKey)
+                .uri(geminiApiUrl + "?key=" + geminiApiKey)
                 .header("Content-Type", "application/json")
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
-
         return response;
     }
 }

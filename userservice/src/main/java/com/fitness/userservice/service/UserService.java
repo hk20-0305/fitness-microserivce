@@ -72,4 +72,6 @@ public class UserService {
         log.info("Calling User Validation API for userId: {}", userId);
         return repository.existsByKeycloakId(userId);
     }
+
+
 }
