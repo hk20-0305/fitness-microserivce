@@ -77,6 +77,17 @@ public class ActivityService {
                 .collect(Collectors.toList());
     }
 
+    public void deleteActivity(String activityId, String userId) {
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new RuntimeException("Activity not found with id: " + activityId));
+
+        if (!activity.getUserId().equals(userId)) {
+            throw new RuntimeException("Unauthorized: You can only delete your own activities");
+        }
+
+        activityRepository.deleteById(activityId);
+    }
+
     public ActivityResponse getActivityById(String activityId) {
         return activityRepository.findById(activityId)
                 .map(this::mapToResponse)

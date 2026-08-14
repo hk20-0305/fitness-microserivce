@@ -1,85 +1,55 @@
-import { Box, Button, Typography } from "@mui/material";
-import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "react-oauth2-code-pkce";
-import { useDispatch } from "react-redux";
-import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from "react-router";
-import { setCredentials } from "./store/authSlice";
-import ActivityForm from "./components/ActivityForm";
-import ActivityList from "./components/ActivityList";
-import ActivityDetail from "./components/ActivityDetail";
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import { useContext } from 'react';
+import { AuthContext } from 'react-oauth2-code-pkce';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from './store/authSlice';
+import theme from './theme';
+import LoginPage from './components/LoginPage';
+import DashboardLayout from './components/layout/DashboardLayout';
+import DashboardPage from './components/dashboard/DashboardPage';
+import ActivitiesPage from './components/dashboard/ActivitiesPage';
+import ActivityDetail from './components/activities/ActivityDetail';
+import AICoachPage from './components/ai/AICoachPage';
+import ProfilePage from './components/profile/ProfilePage';
 
-const ActvitiesPage = () => {
-  return (<Box sx={{ p: 2, border: '1px dashed grey' }}>
-    <ActivityForm onActivityAdded = {() => window.location.reload()} />
-    <ActivityList />
-  </Box>);
-}
+const AuthenticatedApp = () => {
+  return (
+    <DashboardLayout>
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/activities" element={<ActivitiesPage />} />
+        <Route path="/activities/:id" element={<ActivityDetail />} />
+        <Route path="/ai-coach" element={<AICoachPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </DashboardLayout>
+  );
+};
 
 function App() {
-  const { token, tokenData, logIn, logOut, isAuthenticated, error } = useContext(AuthContext);
+  const { token, tokenData } = useContext(AuthContext);
   const dispatch = useDispatch();
-  const [authReady, setAuthReady] = useState(false);
-  
-  useEffect(() => {
-    if (token) {
-      dispatch(setCredentials({token, user: tokenData}));
-      setAuthReady(true);
-    }
-  }, [token, tokenData, dispatch]);
+
+  // Sync auth state with Redux/localStorage when token changes
+  if (token && tokenData) {
+    dispatch(setCredentials({ token, user: tokenData }));
+  }
 
   return (
-    <Router>
-      {!token ? (
-      <Box
-      sx={{
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        p: 2,
-      }}
-    >
-      <Typography variant="h4" gutterBottom>
-        Welcome to the Fitness Tracker App
-      </Typography>
-      <Typography variant="subtitle1" sx={{ mb: 3 }}>
-        Please login to access your activities
-      </Typography>
-      {error && (
-        <Typography color="error" sx={{ mb: 2, maxWidth: 500 }}>
-          Authentication error: {error}
-        </Typography>
-      )}
-      <Button variant="contained" color="primary" size="large" onClick={() => {
-                logIn();
-              }}>
-        LOGIN
-      </Button>
-    </Box>
-            ) : (
-              // <div>
-              //   <pre>{JSON.stringify(tokenData, null, 2)}</pre>
-              //   <pre>{JSON.stringify(token, null, 2)}</pre>
-              // </div>
-
-             
-
-              <Box sx={{ p: 2, border: '1px dashed grey' }}>
-                 <Button variant="contained" color="secondary" onClick={logOut}>
-                  Logout
-                </Button>
-              <Routes>
-                <Route path="/activities" element={<ActvitiesPage />}/>
-                <Route path="/activities/:id" element={<ActivityDetail />}/>
-
-                <Route path="/" element={token ? <Navigate to="/activities" replace/> : <div>Welcome! Please Login.</div>} />
-              </Routes>
-            </Box>
-            )}
-    </Router>
-  )
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        {!token ? (
+          <LoginPage />
+        ) : (
+          <AuthenticatedApp />
+        )}
+      </Router>
+    </ThemeProvider>
+  );
 }
 
-export default App
+export default App;
