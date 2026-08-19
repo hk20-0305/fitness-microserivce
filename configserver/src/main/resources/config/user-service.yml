@@ -1,11 +1,11 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/fitness_user_db
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://${AIVEN_PG_HOST}:${AIVEN_PG_PORT}/fitness_user_db?sslmode=require
+    username: ${AIVEN_PG_USER}
+    password: ${AIVEN_PG_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -16,10 +16,7 @@ spring:
 eureka:
   instance:
     prefer-ip-address: true
-    ip-address: 127.0.0.1
 
   client:
     service-url:
       defaultZone: https://fitness-microserivce.onrender.com/eureka/
-
-

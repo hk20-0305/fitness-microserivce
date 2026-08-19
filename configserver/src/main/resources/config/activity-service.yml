@@ -1,14 +1,17 @@
 spring:
   data:
     mongodb:
-      uri: mongodb://localhost:27017/fitnessactivity
+      uri: mongodb+srv://adminfit:admin123@cluster0.0cwkkt7.mongodb.net/?appName=Cluster0
       database: fitnessactivity
 
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    host: warthog.lmq.cloudamqp.com
+    port: 5671
+    username: bykfcrqi
+    password: eZN83FJeO5bsD8BAcURvD59qBPNw_h64
+    virtual-host: bykfcrqi
+    ssl:
+      enabled: true
 
 server:
   port: 8082
