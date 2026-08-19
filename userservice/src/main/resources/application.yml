@@ -1,6 +1,6 @@
 spring:
   application:
     name: user-service
-  config:
-    import: optional:configserver:http://localhost:8888
 
+  config:
+    import: optional:configserver:https://fitness-microserivce-1.onrender.com
