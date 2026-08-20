@@ -19,7 +19,7 @@ server:
 eureka:
   instance:
     prefer-ip-address: false
-    hostname: https://fitness-microserivce-3.onrender.com
+    hostname: fitness-microserivce-3.onrender.com
     secure-port-enabled: true
     non-secure-port-enabled: false
     secure-port: 443
