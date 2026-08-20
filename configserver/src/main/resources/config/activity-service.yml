@@ -14,7 +14,7 @@ spring:
       enabled: true
 
 server:
-  port: ${PORT:8082}
+  port: ${PORT:10000}
 
 eureka:
   instance:
