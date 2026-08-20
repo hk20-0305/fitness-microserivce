@@ -18,10 +18,12 @@ spring:
 
 eureka:
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
+    hostname: https://fitness-microserivce-2.onrender.com
+    secure-port-enabled: true
+    non-secure-port-enabled: false
+    secure-port: 443
 
   client:
-    register-with-eureka: true
-    fetch-registry: true
     service-url:
       defaultZone: https://fitness-microserivce.onrender.com/eureka/
