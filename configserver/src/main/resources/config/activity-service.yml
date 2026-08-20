@@ -1,25 +1,25 @@
 spring:
   data:
     mongodb:
-      uri: mongodb+srv://adminfit:admin123@cluster0.0cwkkt7.mongodb.net/?appName=Cluster0
+      uri: ${MONGODB_URI}
       database: fitnessactivity
 
   rabbitmq:
-    host: warthog.lmq.cloudamqp.com
-    port: 5671
-    username: bykfcrqi
-    password: eZN83FJeO5bsD8BAcURvD59qBPNw_h64
-    virtual-host: bykfcrqi
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5671}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST}
     ssl:
       enabled: true
 
 server:
-  port: 8082
+  port: ${PORT:8082}
 
 eureka:
   instance:
     prefer-ip-address: true
-    ip-address: 127.0.0.1
+    
 
   client:
     service-url:
