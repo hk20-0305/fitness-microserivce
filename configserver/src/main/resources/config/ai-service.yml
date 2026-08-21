@@ -1,9 +1,9 @@
-server:
-  port: 8083
-
 spring:
   application:
     name: ai-service
+
+  config:
+    import: optional:configserver:https://fitness-microserivce-1.onrender.com
 
   data:
     mongodb:
@@ -11,17 +11,21 @@ spring:
       database: fitnessreco
 
   rabbitmq:
-    host: warthog.lmq.cloudamqp.com
-    port: 5671
-    username: bykfcrqi
-    password: eZN83FJeO5bsD8BAcURvD59qBPNw_h64
-    virtual-host: bykfcrqi
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5671}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST}
     ssl:
       enabled: true
 
+server:
+  port: ${PORT:8083}
+
 eureka:
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false
+    hostname: ${RENDER_EXTERNAL_HOSTNAME:localhost}
 
   client:
     service-url:
