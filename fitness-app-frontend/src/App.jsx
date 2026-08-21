@@ -1,11 +1,6 @@
 import { ThemeProvider, CssBaseline } from '@mui/material';
-import { useContext } from 'react';
-import { AuthContext } from 'react-oauth2-code-pkce';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router';
-import { useDispatch } from 'react-redux';
-import { setCredentials } from './store/authSlice';
 import theme from './theme';
-import LoginPage from './components/LoginPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardPage from './components/dashboard/DashboardPage';
 import ActivitiesPage from './components/dashboard/ActivitiesPage';
@@ -30,23 +25,11 @@ const AuthenticatedApp = () => {
 };
 
 function App() {
-  const { token, tokenData } = useContext(AuthContext);
-  const dispatch = useDispatch();
-
-  // Sync auth state with Redux/localStorage when token changes
-  if (token && tokenData) {
-    dispatch(setCredentials({ token, user: tokenData }));
-  }
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        {!token ? (
-          <LoginPage />
-        ) : (
-          <AuthenticatedApp />
-        )}
+        <AuthenticatedApp />
       </Router>
     </ThemeProvider>
   );

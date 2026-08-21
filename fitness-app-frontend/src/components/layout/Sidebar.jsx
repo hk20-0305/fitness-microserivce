@@ -2,8 +2,6 @@ import { Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText
 import { LayoutDashboard, Activity, Sparkles, User, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
-import { useContext } from 'react';
-import { AuthContext } from 'react-oauth2-code-pkce';
 import { logout } from '../../store/authSlice';
 
 const drawerWidth = 260;
@@ -22,7 +20,6 @@ const Sidebar = ({ mobileOpen, onClose }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  const { logOut } = useContext(AuthContext);
 
   const handleNavigate = (path) => {
     navigate(path);
@@ -31,7 +28,6 @@ const Sidebar = ({ mobileOpen, onClose }) => {
 
   const handleLogout = () => {
     dispatch(logout());
-    logOut();
   };
 
   const drawerContent = (
@@ -88,7 +84,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
             <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
               <LogOut size={20} />
             </ListItemIcon>
-            <ListItemText primary="Logout" />
+            <ListItemText primary="Reset Profile" />
           </ListItemButton>
         </ListItem>
       </Box>

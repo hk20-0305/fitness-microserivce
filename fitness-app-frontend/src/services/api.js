@@ -3,11 +3,11 @@ import axios from "axios";
 const API_URL = 'http://localhost:8090/api';
 
 const api = axios.create({
-    baseURL:API_URL
+    baseURL: API_URL
 });
 
 api.interceptors.request.use((config) => {
-    const userId = localStorage.getItem('userId');
+    const userId = localStorage.getItem('userId') || 'user-default-1';
     const token = localStorage.getItem('token');
 
     if (token) {
@@ -18,9 +18,7 @@ api.interceptors.request.use((config) => {
         config.headers['X-User-ID'] = userId;
     }
     return config;
-}
-);
-
+});
 
 export const getActivities = () => api.get('/activities');
 export const addActivity = (activity) => api.post('/activities', activity);

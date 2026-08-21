@@ -135,7 +135,7 @@ const ProfilePage = () => {
             </Typography>
           </Box>
           <Typography variant="body2" sx={{ color: '#9AA4B2' }}>
-            Your account is securely managed with Keycloak authentication.
+            Your account profile and fitness data.
           </Typography>
         </CardContent>
       </Card>

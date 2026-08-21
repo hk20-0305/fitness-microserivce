@@ -1,26 +1,37 @@
 import { createSlice } from '@reduxjs/toolkit'
 
+const defaultUser = {
+  name: 'Fitness User',
+  email: 'user@fitness.com',
+  sub: 'user-default-1'
+};
+
+const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
+const savedUserId = localStorage.getItem('userId');
+
 const authSlice = createSlice({
   name: 'auth',
-  initialState : {
-    user: JSON.parse(localStorage.getItem('user')) || null,
+  initialState: {
+    user: savedUser || defaultUser,
     token: localStorage.getItem('token') || null,
-    userId: localStorage.getItem('userId') || null
+    userId: savedUserId || (savedUser ? savedUser.sub : defaultUser.sub)
   },
   reducers: {
     setCredentials: (state, action) => {
       state.user = action.payload.user;
-      state.token = action.payload.token;
-      state.userId = action.payload.user.sub;
+      state.token = action.payload.token || null;
+      state.userId = action.payload.user?.sub || action.payload.userId || defaultUser.sub;
 
-      localStorage.setItem('token', action.payload.token);
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
-      localStorage.setItem('userId', action.payload.user.sub);
+      if (action.payload.token) {
+        localStorage.setItem('token', action.payload.token);
+      }
+      localStorage.setItem('user', JSON.stringify(state.user));
+      localStorage.setItem('userId', state.userId);
     },
     logout: (state) => {
-      state.user = null;
+      state.user = defaultUser;
       state.token = null;
-      state.userId = null;
+      state.userId = defaultUser.sub;
       
       localStorage.removeItem('token');
       localStorage.removeItem('user');
