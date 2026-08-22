@@ -2,16 +2,16 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI}
-      database: fitnessactivity
+      database: ${MONGODB_DATABASE:fitnessactivity}
 
   rabbitmq:
     host: ${RABBITMQ_HOST}
     port: ${RABBITMQ_PORT:5671}
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
-    virtual-host: ${RABBITMQ_VHOST}
+    virtual-host: ${RABBITMQ_VHOST:/}
     ssl:
-      enabled: true
+      enabled: ${RABBITMQ_SSL_ENABLED:true}
 
 server:
   port: ${PORT:8082}
@@ -19,19 +19,19 @@ server:
 eureka:
   instance:
     prefer-ip-address: false
-    hostname: fitness-microserivce-3.onrender.com
+    hostname: ${RENDER_EXTERNAL_HOSTNAME:fitness-microserivce-3.onrender.com}
     secure-port-enabled: true
     non-secure-port-enabled: false
     secure-port: 443
 
   client:
     service-url:
-      defaultZone: https://fitness-microserivce.onrender.com/eureka/
+      defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
 
 rabbitmq:
   exchange:
-    name: fitness.exchange
+    name: ${RABBITMQ_EXCHANGE_NAME:fitness.exchange}
   queue:
-    name: activity.queue
+    name: ${RABBITMQ_QUEUE_NAME:activity.queue}
   routing:
-    key: activity.tracking
+    key: ${RABBITMQ_ROUTING_KEY:activity.tracking}

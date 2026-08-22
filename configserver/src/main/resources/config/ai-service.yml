@@ -1,23 +1,17 @@
 spring:
-  application:
-    name: ai-service
-
-  config:
-    import: optional:configserver:https://fitness-microserivce-1.onrender.com
-
   data:
     mongodb:
       uri: ${MONGODB_URI}
-      database: fitnessreco
+      database: ${MONGODB_DATABASE:fitnessreco}
 
   rabbitmq:
     host: ${RABBITMQ_HOST}
     port: ${RABBITMQ_PORT:5671}
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
-    virtual-host: ${RABBITMQ_VHOST}
+    virtual-host: ${RABBITMQ_VHOST:/}
     ssl:
-      enabled: true
+      enabled: ${RABBITMQ_SSL_ENABLED:true}
 
 server:
   port: ${PORT:8083}
@@ -32,19 +26,18 @@ eureka:
 
   client:
     service-url:
-      defaultZone: https://fitness-microserivce.onrender.com/eureka/
+      defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
 
 rabbitmq:
   exchange:
-    name: fitness.exchange
-
+    name: ${RABBITMQ_EXCHANGE_NAME:fitness.exchange}
   queue:
-    name: activity.queue
-
+    name: ${RABBITMQ_QUEUE_NAME:activity.queue}
   routing:
-    key: activity.tracking
+    key: ${RABBITMQ_ROUTING_KEY:activity.tracking}
 
 gemini:
   api:
     url: ${GEMINI_API_URL}
     key: ${GEMINI_API_KEY}
+

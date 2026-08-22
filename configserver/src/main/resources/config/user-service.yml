@@ -2,13 +2,10 @@ server:
   port: ${PORT:8081}
 
 spring:
-  application:
-    name: user-service
-
   datasource:
-    url: jdbc:postgresql://${AIVEN_PG_HOST}:${AIVEN_PG_PORT}/fitness_user_db?sslmode=require
-    username: ${AIVEN_PG_USER}
-    password: ${AIVEN_PG_PASSWORD}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${AIVEN_PG_HOST}:${AIVEN_PG_PORT:5432}/fitness_user_db?sslmode=require}
+    username: ${AIVEN_PG_USER:${SPRING_DATASOURCE_USERNAME}}
+    password: ${AIVEN_PG_PASSWORD:${SPRING_DATASOURCE_PASSWORD}}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -19,11 +16,12 @@ spring:
 eureka:
   instance:
     prefer-ip-address: false
-    hostname: fitness-microserivce-2.onrender.com
+    hostname: ${RENDER_EXTERNAL_HOSTNAME:fitness-microserivce-2.onrender.com}
     secure-port-enabled: true
     non-secure-port-enabled: false
     secure-port: 443
 
   client:
     service-url:
-      defaultZone: https://fitness-microserivce.onrender.com/eureka/
+      defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
+

@@ -3,7 +3,7 @@ spring:
     name: api-gateway
 
   config:
-    import: optional:configserver:https://fitness-microserivce-1.onrender.com
+    import: configserver:${CONFIG_SERVER_URL:https://fitness-microserivce-1.onrender.com}
 
   cloud:
     gateway:
@@ -29,4 +29,5 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: https://fitness-microserivce.onrender.com/eureka/
+      defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
+

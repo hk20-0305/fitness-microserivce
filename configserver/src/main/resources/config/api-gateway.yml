@@ -1,11 +1,7 @@
+server:
+  port: ${PORT:8090}
+
 spring:
-  application:
-    name: api-gateway
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://localhost:8181/realms/fitness-oauth2/protocol/openid-connect/certs
   cloud:
     gateway:
       routes:
@@ -24,10 +20,7 @@ spring:
           predicates:
             - Path=/api/recommendations/**
 
-server:
-  port: 8090
-
 eureka:
   client:
-    serviceUrl:
-      defaultZone: https://fitness-microserivce.onrender.com/eureka/
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}

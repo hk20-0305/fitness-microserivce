@@ -5,9 +5,11 @@ spring:
     active: native
   cloud:
     config:
+      enabled: false
       server:
         native:
           search-locations: classpath:/config
 
 server:
   port: ${PORT:8888}
+
