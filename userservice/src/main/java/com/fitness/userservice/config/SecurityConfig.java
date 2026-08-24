@@ -26,6 +26,8 @@ public class SecurityConfig {
             .sessionManagement(session ->
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                    // Public Actuator health check endpoint (no auth required)
+                    .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                     // Public auth endpoints
                     .requestMatchers(HttpMethod.POST, "/api/users/register", "/api/users/login").permitAll()
                     // Preflight CORS requests must always be allowed

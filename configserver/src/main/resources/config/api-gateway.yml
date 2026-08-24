@@ -28,3 +28,13 @@ eureka:
 # JWT — production MUST set JWT_SECRET env var (no fallback — prevents accidental dev secret use in prod)
 jwt:
   secret: ${JWT_SECRET}
+
+# Actuator — expose only /actuator/health for public health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

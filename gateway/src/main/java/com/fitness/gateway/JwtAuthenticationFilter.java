@@ -47,7 +47,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     /** Routes that must be accessible without a JWT. */
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/users/login",
-            "/api/users/register"
+            "/api/users/register",
+            "/actuator/health"
     );
 
     private final GatewayJwtProperties jwtProperties;

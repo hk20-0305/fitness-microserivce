@@ -3,3 +3,14 @@ spring:
     name: activity-service
   config:
     import: configserver:${CONFIG_SERVER_URL:https://fitness-microserivce-1.onrender.com}
+
+# Actuator — expose only /actuator/health for public health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+

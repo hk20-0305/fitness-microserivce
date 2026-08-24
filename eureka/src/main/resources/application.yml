@@ -10,3 +10,13 @@ eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
+
+# Actuator — expose only /actuator/health for public health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

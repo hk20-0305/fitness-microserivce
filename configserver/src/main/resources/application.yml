@@ -13,3 +13,13 @@ spring:
 server:
   port: ${PORT:8888}
 
+# Actuator — expose only /actuator/health for public health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+

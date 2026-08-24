@@ -41,3 +41,14 @@ gemini:
     url: ${GEMINI_API_URL}
     key: ${GEMINI_API_KEY}
 
+# Actuator — expose only /actuator/health for public health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+
