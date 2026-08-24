@@ -40,30 +40,80 @@ const ActivityDetail = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   // Separate function to fetch AI recommendations
-  const fetchRecommendation = useCallback(async (activityId) => {
+  // Returns true if recommendation was found, false if should continue polling
+  const fetchRecommendation = useCallback(async (activityId, isRetry = false) => {
     if (!activityId) return;
     try {
-      setAiLoading(true);
-      setAiError(null);
+      if (!isRetry) {
+        setAiLoading(true);
+        setAiError(null);
+      }
       const res = await getActivityDetail(activityId);
       if (res && res.data) {
         setRecommendation(res.data);
+        setAiLoading(false);
+        setAiError(null);
+        return true; // found
       } else {
         setRecommendation(null);
+        return false;
       }
     } catch (err) {
       console.warn('AI recommendation fetch error:', err);
       setRecommendation(null);
-      // Determine if it's still being processed (404) or temporarily unavailable (503 / 500 / other)
-      if (err.response && err.response.status === 404) {
-        setAiError('AI is generating recommendations for this activity. Please check back shortly.');
+      const status = err.response?.status;
+      if (status === 404) {
+        // Return false so caller can decide to retry (activity still processing)
+        return false;
       } else {
+        // Non-404 error (503, 500, etc.) — show error and stop
         setAiError('AI recommendations are temporarily unavailable. Please try again later.');
+        setAiLoading(false);
+        return null; // null = stop retrying
       }
-    } finally {
-      setAiLoading(false);
     }
   }, []);
+
+  // Poll for AI recommendation with limited retries (for newly created activities)
+  const startAiPolling = useCallback((activityId) => {
+    const MAX_POLLS = 6;        // 6 attempts × 5 s = 30 s total wait
+    const POLL_INTERVAL_MS = 5000;
+    let pollCount = 0;
+
+    setAiLoading(true);
+    setAiError(null);
+
+    const poll = async () => {
+      const result = await fetchRecommendation(activityId, true);
+
+      if (result === true) {
+        // Found — stop
+        return;
+      }
+
+      pollCount += 1;
+
+      if (result === null) {
+        // Non-404 error — already set error state in fetchRecommendation
+        setAiLoading(false);
+        return;
+      }
+
+      // result === false (still 404 — processing)
+      if (pollCount < MAX_POLLS) {
+        // Still within retry window — show "generating" state and schedule next poll
+        setAiError(null); // keep loading indicator visible
+        setTimeout(poll, POLL_INTERVAL_MS);
+      } else {
+        // All polls exhausted — show gentle message with manual retry button
+        setAiLoading(false);
+        setAiError('AI is generating recommendations for this activity. Please check back shortly.');
+      }
+    };
+
+    poll();
+  }, [fetchRecommendation]);
+
 
   // Fetch Activity Data
   useEffect(() => {
@@ -92,8 +142,8 @@ const ActivityDetail = () => {
 
         if (foundActivity) {
           setActivity(foundActivity);
-          // Fetch AI recommendation separately so failures don't block activity view
-          fetchRecommendation(id);
+          // Use polling so newly created activities get AI recommendations automatically
+          startAiPolling(id);
         } else {
           setActivityError('Activity not found');
         }
@@ -116,7 +166,7 @@ const ActivityDetail = () => {
     return () => {
       isMounted = false;
     };
-  }, [id, fetchRecommendation]);
+  }, [id, fetchRecommendation, startAiPolling]);
 
   const handleDelete = async () => {
     try {
@@ -402,7 +452,7 @@ const ActivityDetail = () => {
             <Button
               variant="outlined"
               startIcon={<RotateCw size={16} />}
-              onClick={() => fetchRecommendation(id)}
+              onClick={() => startAiPolling(id)}
               disabled={aiLoading}
               sx={{
                 borderColor: 'rgba(124, 255, 79, 0.4)',
@@ -430,7 +480,7 @@ const ActivityDetail = () => {
               size="small"
               variant="outlined"
               startIcon={<RotateCw size={14} />}
-              onClick={() => fetchRecommendation(id)}
+              onClick={() => startAiPolling(id)}
               disabled={aiLoading}
               sx={{
                 borderColor: 'rgba(255, 255, 255, 0.2)',

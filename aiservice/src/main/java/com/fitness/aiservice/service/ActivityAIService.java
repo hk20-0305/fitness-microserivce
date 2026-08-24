@@ -80,7 +80,8 @@ public class ActivityAIService {
                     .build();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to parse Gemini response for activityId: {}. Falling back to default. Error: {}",
+                    activity.getId(), e.getMessage());
             return createDefaultRecommendation(activity);
         }
     }
@@ -149,6 +150,12 @@ public class ActivityAIService {
     }
 
     private String createPromptForActivity(Activity activity) {
+        // Guard against null Integer fields to prevent NPE in String.format
+        int duration = activity.getDuration() != null ? activity.getDuration() : 0;
+        int calories = activity.getCaloriesBurned() != null ? activity.getCaloriesBurned() : 0;
+        String type = activity.getType() != null ? activity.getType() : "Unknown";
+        String metrics = activity.getAdditionalMetrics() != null ? activity.getAdditionalMetrics().toString() : "None";
+
         return String.format("""
         Analyze this fitness activity and provide detailed recommendations in the following EXACT JSON format:
         {
@@ -185,10 +192,10 @@ public class ActivityAIService {
         Provide detailed analysis focusing on performance, improvements, next workout suggestions, and safety guidelines.
         Ensure the response follows the EXACT JSON format shown above.
         """,
-                activity.getType(),
-                activity.getDuration(),
-                activity.getCaloriesBurned(),
-                activity.getAdditionalMetrics()
+                type,
+                duration,
+                calories,
+                metrics
         );
     }
 }

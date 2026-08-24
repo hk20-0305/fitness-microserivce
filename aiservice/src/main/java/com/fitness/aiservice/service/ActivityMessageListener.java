@@ -18,20 +18,46 @@ public class ActivityMessageListener {
 
     @RabbitListener(queues = "${rabbitmq.queue.name:activity.queue}")
     public void processActivity(Activity activity) {
-        if (activity == null || activity.getUserId() == null || activity.getUserId().isBlank()) {
-            log.warn("Discarding invalid activity message: {}", activity);
+        if (activity == null) {
+            log.warn("Received null activity message — discarding");
             return;
         }
 
-        log.info("Received activity for processing: id={}, userId={}", activity.getId(), activity.getUserId());
+        if (activity.getUserId() == null || activity.getUserId().isBlank()) {
+            log.warn("Received activity with missing userId (activityId={}) — discarding", activity.getId());
+            return;
+        }
+
+        log.info("[AI-PIPELINE] Step 1 — Activity received from RabbitMQ: activityId={}, userId={}, type={}",
+                activity.getId(), activity.getUserId(), activity.getType());
+
         try {
+            log.info("[AI-PIPELINE] Step 2 — Starting recommendation generation for activityId={}", activity.getId());
             Recommendation recommendation = aiService.generateRecommendation(activity);
-            log.info("Generated Recommendation: id={}, activityId={}, userId={}", 
-                    recommendation.getId(), recommendation.getActivityId(), recommendation.getUserId());
-            recommendationRepository.save(recommendation);
+
+            if (recommendation == null) {
+                log.error("[AI-PIPELINE] generateRecommendation returned null for activityId={} — skipping save", activity.getId());
+                return;
+            }
+
+            // Ensure the activityId and userId are correctly set
+            if (recommendation.getActivityId() == null || recommendation.getActivityId().isBlank()) {
+                log.error("[AI-PIPELINE] Recommendation has missing activityId for activity={} — skipping save", activity.getId());
+                return;
+            }
+
+            log.info("[AI-PIPELINE] Step 3 — Recommendation created: activityId={}, userId={}, isFallback={}",
+                    recommendation.getActivityId(),
+                    recommendation.getUserId(),
+                    recommendation.getRecommendation().contains("temporarily unavailable"));
+
+            Recommendation saved = recommendationRepository.save(recommendation);
+
+            log.info("[AI-PIPELINE] Step 4 — Recommendation saved successfully: savedId={}, activityId={}, userId={}",
+                    saved.getId(), saved.getActivityId(), saved.getUserId());
+
         } catch (Exception e) {
-            log.error("Failed to process activity and generate recommendation for activityId: {}", activity.getId(), e);
+            log.error("[AI-PIPELINE] FAILED to process activityId={}: {}", activity.getId(), e.getMessage(), e);
         }
     }
 }
-
