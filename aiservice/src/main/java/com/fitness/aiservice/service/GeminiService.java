@@ -12,8 +12,8 @@ import java.util.Map;
 @Slf4j
 public class GeminiService {
 
-    private static final int MAX_ATTEMPTS = 4;
-    private static final long[] BACKOFF_DELAYS_MS = {1000L, 2000L, 4000L};
+    private static final int MAX_ATTEMPTS = 5;
+    private static final long[] BACKOFF_DELAYS_MS = {2000L, 5000L, 10000L, 20000L};
 
     private final WebClient webClient;
 
@@ -38,39 +38,53 @@ public class GeminiService {
 
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
-                return webClient.post()
+                log.info("Calling Gemini API (attempt {}/{})...", attempt, MAX_ATTEMPTS);
+
+                String response = webClient.post()
                         .uri(geminiApiUrl + "?key=" + geminiApiKey)
                         .header("Content-Type", "application/json")
                         .bodyValue(requestBody)
                         .retrieve()
                         .bodyToMono(String.class)
                         .block();
+
+                log.info("Gemini API call succeeded on attempt {}/{}", attempt, MAX_ATTEMPTS);
+                return response;
+
             } catch (WebClientResponseException ex) {
                 int status = ex.getStatusCode().value();
-                // Do not retry client auth/validation errors (401, 403, 400)
-                if (status == 401 || status == 403 || status == 400) {
-                    log.error("Gemini API client error: HTTP {}. Non-retryable.", status);
+
+                // Do not retry permanent client errors (400, 401, 403, etc.)
+                if (status == 400 || status == 401 || status == 403) {
+                    log.error("Gemini API client error: HTTP {}. Non-retryable (attempt {}/{}). Aborting retries.",
+                            status, attempt, MAX_ATTEMPTS);
                     return null;
                 }
 
-                // Retry temporary failures such as 503 UNAVAILABLE (high demand), 429, 502, 504
+                // Retry only temporary/transient server & rate-limit errors (429, 500, 502, 503, 504)
                 if (isTransientStatus(status) && attempt < MAX_ATTEMPTS) {
                     long delay = BACKOFF_DELAYS_MS[attempt - 1];
-                    log.warn("Gemini API returned HTTP {} (temporary / high demand) on attempt {}/{}. Retrying in {} ms...",
-                            status, attempt, MAX_ATTEMPTS, delay);
+                    log.warn("Gemini API returned HTTP {} (transient/high demand) on attempt {}/{}. Retrying in {} ms ({} seconds)...",
+                            status, attempt, MAX_ATTEMPTS, delay, delay / 1000);
                     sleep(delay);
+                } else if (isTransientStatus(status)) {
+                    log.error("Gemini API call failed permanently after all {} attempts with HTTP {}", MAX_ATTEMPTS, status);
+                    return null;
                 } else {
-                    log.error("Gemini API call failed after {} attempts with HTTP {}", attempt, status);
+                    log.error("Gemini API returned unexpected HTTP {} (attempt {}/{}). Aborting retries.",
+                            status, attempt, MAX_ATTEMPTS);
                     return null;
                 }
+
             } catch (Exception ex) {
                 if (attempt < MAX_ATTEMPTS) {
                     long delay = BACKOFF_DELAYS_MS[attempt - 1];
-                    log.warn("Gemini API call encountered error ({}) on attempt {}/{}. Retrying in {} ms...",
-                            ex.getClass().getSimpleName(), attempt, MAX_ATTEMPTS, delay);
+                    log.warn("Gemini API call encountered error ({}: {}) on attempt {}/{}. Retrying in {} ms ({} seconds)...",
+                            ex.getClass().getSimpleName(), ex.getMessage(), attempt, MAX_ATTEMPTS, delay, delay / 1000);
                     sleep(delay);
                 } else {
-                    log.error("Gemini API call failed after {} attempts: {}", attempt, ex.getMessage());
+                    log.error("Gemini API call failed permanently after all {} attempts due to: {}",
+                            MAX_ATTEMPTS, ex.getMessage());
                     return null;
                 }
             }
@@ -80,7 +94,7 @@ public class GeminiService {
     }
 
     private boolean isTransientStatus(int status) {
-        return status == 503 || status == 502 || status == 504 || status == 429;
+        return status == 429 || status == 500 || status == 502 || status == 503 || status == 504;
     }
 
     private void sleep(long millis) {
@@ -92,3 +106,4 @@ public class GeminiService {
         }
     }
 }
+
