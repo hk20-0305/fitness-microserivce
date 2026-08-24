@@ -18,8 +18,10 @@ server:
 
 eureka:
   instance:
-    prefer-ip-address: false
     hostname: ${RENDER_EXTERNAL_HOSTNAME:fitness-microserivce-4.onrender.com}
+    secure-port-enabled: true
+    non-secure-port-enabled: false
+    secure-port: 443
 
   client:
     service-url:
