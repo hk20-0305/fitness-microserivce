@@ -21,10 +21,19 @@ public class ActivityAIService {
     private final GeminiService geminiService;
 
     public Recommendation generateRecommendation(Activity activity) {
-        String prompt = createPromptForActivity(activity);
-        String aiResponse = geminiService.getAnswer(prompt);
-        log.info("RESPONSE FROM AI: {} ", aiResponse);
-        return processAiResponse(activity, aiResponse);
+        try {
+            String prompt = createPromptForActivity(activity);
+            String aiResponse = geminiService.getAnswer(prompt);
+            if (aiResponse == null || aiResponse.isBlank()) {
+                log.warn("Gemini response was empty for activityId: {}. Providing fallback recommendation.", activity.getId());
+                return createDefaultRecommendation(activity);
+            }
+            log.info("RESPONSE FROM AI: {} ", aiResponse);
+            return processAiResponse(activity, aiResponse);
+        } catch (Exception e) {
+            log.error("Failed to generate recommendation for activityId: {}: {}", activity.getId(), e.getMessage());
+            return createDefaultRecommendation(activity);
+        }
     }
 
     private Recommendation processAiResponse(Activity activity, String aiResponse) {
@@ -81,7 +90,7 @@ public class ActivityAIService {
                 .activityId(activity.getId())
                 .userId(activity.getUserId())
                 .activityType(activity.getType())
-                .recommendation("Unable to generate detailed analysis")
+                .recommendation("AI recommendations are temporarily unavailable. Please try again later.")
                 .improvements(Collections.singletonList("Continue with your current routine"))
                 .suggestions(Collections.singletonList("Consider consulting a fitness professional"))
                 .safety(Arrays.asList(

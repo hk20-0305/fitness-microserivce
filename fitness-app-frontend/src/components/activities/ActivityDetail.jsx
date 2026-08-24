@@ -6,12 +6,13 @@ import {
   Grid2, Skeleton,
   Snackbar, Alert,
   IconButton, Tooltip,
-  Typography
+  Typography,
+  CircularProgress
 } from '@mui/material';
-import { Activity, ArrowLeft, CheckCircle, Clock, Flame, Lightbulb, Shield, Sparkles, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Activity, ArrowLeft, CheckCircle, Clock, Flame, Lightbulb, RotateCw, Shield, Sparkles, Trash2 } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { getActivities, getActivityDetail, deleteActivity } from '../../services/api';
+import { getActivity, getActivities, getActivityDetail, deleteActivity } from '../../services/api';
 
 const typeConfig = {
   RUNNING: { color: '#7CFF4F', bg: 'rgba(124, 255, 79, 0.12)', icon: '🏃', label: 'Running' },
@@ -24,11 +25,98 @@ const typeConfig = {
 const ActivityDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // Activity state
+  const [activity, setActivity] = useState(null);
+  const [loadingActivity, setLoadingActivity] = useState(true);
+  const [activityError, setActivityError] = useState(null);
+
+  // AI Recommendation state
   const [recommendation, setRecommendation] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [activities, setActivities] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+
+  // Notifications
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+
+  // Separate function to fetch AI recommendations
+  const fetchRecommendation = useCallback(async (activityId) => {
+    if (!activityId) return;
+    try {
+      setAiLoading(true);
+      setAiError(null);
+      const res = await getActivityDetail(activityId);
+      if (res && res.data) {
+        setRecommendation(res.data);
+      } else {
+        setRecommendation(null);
+      }
+    } catch (err) {
+      console.warn('AI recommendation fetch error:', err);
+      setRecommendation(null);
+      // Determine if it's still being processed (404) or temporarily unavailable (503 / 500 / other)
+      if (err.response && err.response.status === 404) {
+        setAiError('AI is generating recommendations for this activity. Please check back shortly.');
+      } else {
+        setAiError('AI recommendations are temporarily unavailable. Please try again later.');
+      }
+    } finally {
+      setAiLoading(false);
+    }
+  }, []);
+
+  // Fetch Activity Data
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadActivityData = async () => {
+      try {
+        setLoadingActivity(true);
+        setActivityError(null);
+
+        let foundActivity = null;
+        try {
+          const res = await getActivity(id);
+          foundActivity = res.data;
+        } catch (singleErr) {
+          console.warn('Single getActivity failed, attempting list fallback:', singleErr);
+          try {
+            const listRes = await getActivities();
+            foundActivity = (listRes.data || []).find((a) => a.id === id);
+          } catch (fallbackErr) {
+            console.error('Activities list fallback failed:', fallbackErr);
+          }
+        }
+
+        if (!isMounted) return;
+
+        if (foundActivity) {
+          setActivity(foundActivity);
+          // Fetch AI recommendation separately so failures don't block activity view
+          fetchRecommendation(id);
+        } else {
+          setActivityError('Activity not found');
+        }
+      } catch (err) {
+        console.error('Error loading activity:', err);
+        if (isMounted) {
+          setActivityError('Unable to load activity details');
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingActivity(false);
+        }
+      }
+    };
+
+    if (id) {
+      loadActivityData();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, fetchRecommendation]);
 
   const handleDelete = async () => {
     try {
@@ -41,49 +129,7 @@ const ActivityDetail = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Fetch activity directly by ID
-        const [activityRes, detailRes] = await Promise.allSettled([
-          getActivity(id),
-          getActivityDetail(id),
-        ]);
-
-        if (activityRes.status === 'fulfilled') {
-          setActivities([activityRes.value.data]);
-        } else {
-          // Fallback to getActivities list if single get fails
-          try {
-            const listRes = await getActivities();
-            setActivities(listRes.data || []);
-          } catch (e) {
-            console.error('Failed to load activities list fallback:', e);
-          }
-        }
-
-        if (detailRes.status === 'fulfilled') {
-          setRecommendation(detailRes.value.data);
-        } else {
-          // Recommendation not ready yet or 404 - normal for newly created activities
-          setRecommendation(null);
-        }
-      } catch (err) {
-        console.error(err);
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) fetchData();
-  }, [id]);
-
-
-  if (loading) {
+  if (loadingActivity) {
     return (
       <Box sx={{ maxWidth: 900, mx: 'auto' }}>
         <Skeleton variant="rectangular" sx={{ borderRadius: 3, height: 200, mb: 3 }} />
@@ -92,11 +138,11 @@ const ActivityDetail = () => {
     );
   }
 
-  if (error) {
+  if (activityError || !activity) {
     return (
       <Box sx={{ maxWidth: 900, mx: 'auto', textAlign: 'center', py: 8 }}>
         <Typography variant="h5" sx={{ color: '#FF6B6B', mb: 2 }}>
-          Unable to load activity details
+          {activityError || 'Unable to load activity details'}
         </Typography>
         <Typography variant="body2" sx={{ color: '#9AA4B2', mb: 3 }}>
           Please check your connection and try again.
@@ -108,8 +154,7 @@ const ActivityDetail = () => {
     );
   }
 
-  const activity = activities.find((a) => a.id === id);
-  const config = activity ? typeConfig[activity.type] : typeConfig.RUNNING;
+  const config = typeConfig[activity.type] || typeConfig.RUNNING;
 
   return (
     <Box sx={{ maxWidth: 900, mx: 'auto' }}>
@@ -135,97 +180,97 @@ const ActivityDetail = () => {
         </Tooltip>
       </Box>
 
-      {activity && (
-        <Card sx={{ mb: 3, border: `1px solid ${config.color}20` }}>
-          <CardContent sx={{ p: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-              <Box
-                sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: '14px',
-                  backgroundColor: config.bg,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1.75rem',
-                }}
-              >
-                {config.icon}
-              </Box>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                  {activity.type}
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#9AA4B2' }}>
-                  {activity.createdAt ? new Date(activity.createdAt).toLocaleString() : 'Recent activity'}
-                </Typography>
-              </Box>
-              {recommendation && (
-                <Chip
-                  icon={<Sparkles size={14} />}
-                  label="AI Analyzed"
-                  sx={{
-                    ml: 'auto',
-                    backgroundColor: 'rgba(124, 255, 79, 0.1)',
-                    color: '#7CFF4F',
-                    border: '1px solid rgba(124, 255, 79, 0.2)',
-                  }}
-                />
-              )}
+      {/* Activity Details Card */}
+      <Card sx={{ mb: 3, border: `1px solid ${config.color}20` }}>
+        <CardContent sx={{ p: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: '14px',
+                backgroundColor: config.bg,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.75rem',
+              }}
+            >
+              {config.icon}
             </Box>
+            <Box>
+              <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                {activity.type}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#9AA4B2' }}>
+                {activity.createdAt ? new Date(activity.createdAt).toLocaleString() : 'Recent activity'}
+              </Typography>
+            </Box>
+            {recommendation && (
+              <Chip
+                icon={<Sparkles size={14} />}
+                label="AI Analyzed"
+                sx={{
+                  ml: 'auto',
+                  backgroundColor: 'rgba(124, 255, 79, 0.1)',
+                  color: '#7CFF4F',
+                  border: '1px solid rgba(124, 255, 79, 0.2)',
+                }}
+              />
+            )}
+          </Box>
 
-            <Grid2 container spacing={3}>
-              <Grid2 size={{ xs: 6, sm: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Box sx={{ width: 40, height: 40, borderRadius: '10px', backgroundColor: 'rgba(255, 107, 107, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Flame size={20} color="#FF6B6B" />
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" sx={{ color: '#9AA4B2', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Calories
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      {activity.caloriesBurned} <Typography component="span" variant="body2" sx={{ color: '#9AA4B2' }}>kcal</Typography>
-                    </Typography>
-                  </Box>
+          <Grid2 container spacing={3}>
+            <Grid2 size={{ xs: 6, sm: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box sx={{ width: 40, height: 40, borderRadius: '10px', backgroundColor: 'rgba(255, 107, 107, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Flame size={20} color="#FF6B6B" />
                 </Box>
-              </Grid2>
-              <Grid2 size={{ xs: 6, sm: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Box sx={{ width: 40, height: 40, borderRadius: '10px', backgroundColor: 'rgba(79, 209, 255, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Clock size={20} color="#4FD1FF" />
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" sx={{ color: '#9AA4B2', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Duration
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      {activity.duration} <Typography component="span" variant="body2" sx={{ color: '#9AA4B2' }}>min</Typography>
-                    </Typography>
-                  </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: '#9AA4B2', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Calories
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {activity.caloriesBurned} <Typography component="span" variant="body2" sx={{ color: '#9AA4B2' }}>kcal</Typography>
+                  </Typography>
                 </Box>
-              </Grid2>
-              <Grid2 size={{ xs: 6, sm: 4 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Box sx={{ width: 40, height: 40, borderRadius: '10px', backgroundColor: config.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Activity size={20} color={config.color} />
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" sx={{ color: '#9AA4B2', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Type
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      {activity.type}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Grid2>
+              </Box>
             </Grid2>
-          </CardContent>
-        </Card>
-      )}
+            <Grid2 size={{ xs: 6, sm: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box sx={{ width: 40, height: 40, borderRadius: '10px', backgroundColor: 'rgba(79, 209, 255, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Clock size={20} color="#4FD1FF" />
+                </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: '#9AA4B2', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Duration
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {activity.duration} <Typography component="span" variant="body2" sx={{ color: '#9AA4B2' }}>min</Typography>
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid2>
+            <Grid2 size={{ xs: 6, sm: 4 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box sx={{ width: 40, height: 40, borderRadius: '10px', backgroundColor: config.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Activity size={20} color={config.color} />
+                </Box>
+                <Box>
+                  <Typography variant="caption" sx={{ color: '#9AA4B2', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Type
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {activity.type}
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid2>
+          </Grid2>
+        </CardContent>
+      </Card>
 
+      {/* AI Recommendation Section */}
       {recommendation ? (
         <Card sx={{ border: '1px solid rgba(124, 255, 79, 0.15)', background: 'linear-gradient(180deg, rgba(124, 255, 79, 0.05) 0%, #121821 100%)' }}>
           <CardContent sx={{ p: 4 }}>
@@ -330,6 +375,45 @@ const ActivityDetail = () => {
             </Grid2>
           </CardContent>
         </Card>
+      ) : aiLoading ? (
+        <Card sx={{ border: '1px dashed rgba(124, 255, 79, 0.25)', backgroundColor: 'rgba(124, 255, 79, 0.02)' }}>
+          <CardContent sx={{ p: 4, textAlign: 'center' }}>
+            <CircularProgress size={36} sx={{ color: '#7CFF4F', mb: 2 }} />
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#FFFFFF' }}>
+              Fetching AI Insights...
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#9AA4B2' }}>
+              Analyzing activity data and compiling recommendations.
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : aiError ? (
+        <Card sx={{ border: '1px dashed rgba(255, 184, 77, 0.3)', backgroundColor: 'rgba(255, 184, 77, 0.03)' }}>
+          <CardContent sx={{ p: 4, textAlign: 'center' }}>
+            <Box sx={{ width: 48, height: 48, borderRadius: '12px', backgroundColor: 'rgba(255, 184, 77, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <Sparkles size={24} color="#FFB84D" />
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#FFB84D' }}>
+              AI Recommendations
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#9AA4B2', maxWidth: 500, mx: 'auto', mb: 3 }}>
+              {aiError}
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<RotateCw size={16} />}
+              onClick={() => fetchRecommendation(id)}
+              disabled={aiLoading}
+              sx={{
+                borderColor: 'rgba(124, 255, 79, 0.4)',
+                color: '#7CFF4F',
+                '&:hover': { borderColor: '#7CFF4F', backgroundColor: 'rgba(124, 255, 79, 0.1)' }
+              }}
+            >
+              Retry AI Recommendation
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <Card sx={{ border: '1px dashed rgba(255, 255, 255, 0.1)', backgroundColor: 'rgba(124, 255, 79, 0.03)' }}>
           <CardContent sx={{ p: 4, textAlign: 'center' }}>
@@ -339,12 +423,27 @@ const ActivityDetail = () => {
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
               AI Recommendation
             </Typography>
-            <Typography variant="body2" sx={{ color: '#9AA4B2', maxWidth: 500, mx: 'auto' }}>
+            <Typography variant="body2" sx={{ color: '#9AA4B2', maxWidth: 500, mx: 'auto', mb: 2 }}>
               AI is analyzing your activity. Recommendations are being generated and will appear here shortly.
             </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<RotateCw size={14} />}
+              onClick={() => fetchRecommendation(id)}
+              disabled={aiLoading}
+              sx={{
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                color: '#9AA4B2',
+                '&:hover': { borderColor: '#7CFF4F', color: '#7CFF4F' }
+              }}
+            >
+              Check for Recommendations
+            </Button>
           </CardContent>
         </Card>
       )}
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
