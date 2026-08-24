@@ -42,7 +42,7 @@ const Header = ({ onMenuClick }) => {
           )}
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
-              {user ? `Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, ${user.name || user.preferred_username || 'User'}` : 'Welcome'}
+              {user ? `Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, ${user.firstName || user.name || user.email?.split('@')[0] || 'User'}` : 'Welcome'}
             </Typography>
             <Typography variant="body2" sx={{ color: '#9AA4B2', fontSize: '0.875rem' }}>
               Ready to improve your fitness today?
@@ -53,9 +53,9 @@ const Header = ({ onMenuClick }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <IconButton onClick={handleProfileClick} sx={{ p: 0, ml: 1 }}>
             <Avatar sx={{ width: 36, height: 36, bgcolor: '#7CFF4F', color: '#0B0F14', fontWeight: 600 }}>
-              {(user?.name || user?.preferred_username || 'U').charAt(0).toUpperCase()}
+              {(user?.firstName || user?.name || user?.email || 'U').charAt(0).toUpperCase()}
             </Avatar>
-            {!isMobile && <ChevronDown size={16} sx={{ color: '#9AA4B2', ml: -0.5 }} />}
+            {!isMobile && <ChevronDown size={16} color="#9AA4B2" style={{ marginLeft: -4 }} />}
           </IconButton>
           <Menu
             anchorEl={anchorEl}

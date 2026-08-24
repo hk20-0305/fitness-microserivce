@@ -28,6 +28,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
 
   const handleLogout = () => {
     dispatch(logout());
+    navigate('/login');
   };
 
   const drawerContent = (
@@ -72,7 +73,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
         {user && (
           <Box sx={{ mb: 2, px: 1 }}>
             <Typography variant="body2" sx={{ color: '#FFFFFF', fontWeight: 500 }}>
-              {user.name || user.preferred_username || 'User'}
+              {user.firstName || user.name || user.email?.split('@')[0] || 'User'}
             </Typography>
             <Typography variant="caption" sx={{ color: '#9AA4B2' }}>
               {user.email}
@@ -84,7 +85,7 @@ const Sidebar = ({ mobileOpen, onClose }) => {
             <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
               <LogOut size={20} />
             </ListItemIcon>
-            <ListItemText primary="Reset Profile" />
+            <ListItemText primary="Log Out" />
           </ListItemButton>
         </ListItem>
       </Box>

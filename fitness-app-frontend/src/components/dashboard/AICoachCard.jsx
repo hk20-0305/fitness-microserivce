@@ -2,6 +2,19 @@ import { Card, CardContent, Typography, Box, Button } from '@mui/material';
 import { Sparkles, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
+const renderSafeText = (val) => {
+  if (val == null) return '';
+  if (typeof val === 'string' || typeof val === 'number') return String(val);
+  if (typeof val === 'object') {
+    if (val.recommendation) return val.area ? `${val.area}: ${val.recommendation}` : val.recommendation;
+    if (val.description) return val.workout ? `${val.workout}: ${val.description}` : val.description;
+    if (val.text) return val.text;
+    if (val.overall) return `Overall: ${val.overall}`;
+    return JSON.stringify(val);
+  }
+  return String(val);
+};
+
 const AICoachCard = ({ recommendation }) => {
   const navigate = useNavigate();
 
@@ -29,9 +42,9 @@ const AICoachCard = ({ recommendation }) => {
   }
 
   const latestActivity = recommendation.activityType || 'Activity';
-  const improvements = recommendation.improvements || [];
-  const suggestions = recommendation.suggestions || [];
-  const safety = recommendation.safety || [];
+  const improvements = Array.isArray(recommendation.improvements) ? recommendation.improvements : [];
+  const suggestions = Array.isArray(recommendation.suggestions) ? recommendation.suggestions : [];
+  const safety = Array.isArray(recommendation.safety) ? recommendation.safety : [];
 
   return (
     <Card
@@ -68,7 +81,7 @@ const AICoachCard = ({ recommendation }) => {
           {recommendation.recommendation && (
             <Box>
               <Typography variant="body2" sx={{ color: '#FFFFFF', lineHeight: 1.6 }}>
-                {recommendation.recommendation}
+                {renderSafeText(recommendation.recommendation)}
               </Typography>
             </Box>
           )}
@@ -84,7 +97,7 @@ const AICoachCard = ({ recommendation }) => {
                 <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2, color: '#9AA4B2' }}>
                   {improvements.slice(0, 2).map((item, idx) => (
                     <Typography key={idx} component="li" variant="body2" sx={{ mb: 0.3 }}>
-                      {item}
+                      {renderSafeText(item)}
                     </Typography>
                   ))}
                 </Box>
@@ -98,7 +111,7 @@ const AICoachCard = ({ recommendation }) => {
                 <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2, color: '#9AA4B2' }}>
                   {safety.slice(0, 2).map((item, idx) => (
                     <Typography key={idx} component="li" variant="body2" sx={{ mb: 0.3 }}>
-                      {item}
+                      {renderSafeText(item)}
                     </Typography>
                   ))}
                 </Box>

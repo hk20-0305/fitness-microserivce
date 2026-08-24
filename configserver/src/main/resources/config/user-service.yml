@@ -13,6 +13,11 @@ spring:
       ddl-auto: update
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
+# JWT — production MUST set JWT_SECRET env var (no fallback here)
+jwt:
+  secret: ${JWT_SECRET}
+  expirationSeconds: ${JWT_EXPIRATION_SECONDS:3600}
+
 eureka:
   instance:
     prefer-ip-address: false
@@ -24,4 +29,3 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
-

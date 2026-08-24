@@ -46,12 +46,31 @@ const ActivityDetail = () => {
       try {
         setLoading(true);
         setError(null);
-        const [detailRes, listRes] = await Promise.all([
+        
+        // Fetch activity directly by ID
+        const [activityRes, detailRes] = await Promise.allSettled([
+          getActivity(id),
           getActivityDetail(id),
-          getActivities(),
         ]);
-        setRecommendation(detailRes.data);
-        setActivities(listRes.data || []);
+
+        if (activityRes.status === 'fulfilled') {
+          setActivities([activityRes.value.data]);
+        } else {
+          // Fallback to getActivities list if single get fails
+          try {
+            const listRes = await getActivities();
+            setActivities(listRes.data || []);
+          } catch (e) {
+            console.error('Failed to load activities list fallback:', e);
+          }
+        }
+
+        if (detailRes.status === 'fulfilled') {
+          setRecommendation(detailRes.value.data);
+        } else {
+          // Recommendation not ready yet or 404 - normal for newly created activities
+          setRecommendation(null);
+        }
       } catch (err) {
         console.error(err);
         setError(err);
@@ -62,6 +81,7 @@ const ActivityDetail = () => {
 
     if (id) fetchData();
   }, [id]);
+
 
   if (loading) {
     return (
@@ -221,13 +241,15 @@ const ActivityDetail = () => {
             {recommendation.recommendation && (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="body1" sx={{ color: '#FFFFFF', lineHeight: 1.7, mb: 2 }}>
-                  {recommendation.recommendation}
+                  {typeof recommendation.recommendation === 'object'
+                    ? (recommendation.recommendation.overall || JSON.stringify(recommendation.recommendation))
+                    : recommendation.recommendation}
                 </Typography>
               </Box>
             )}
 
             <Grid2 container spacing={3}>
-              {recommendation.improvements?.length > 0 && (
+              {Array.isArray(recommendation.improvements) && recommendation.improvements.length > 0 && (
                 <Grid2 size={{ xs: 12, md: 6 }}>
                   <Card variant="outlined" sx={{ borderColor: 'rgba(79, 209, 255, 0.2)', backgroundColor: 'rgba(79, 209, 255, 0.03)' }}>
                     <CardContent>
@@ -238,9 +260,13 @@ const ActivityDetail = () => {
                         </Typography>
                       </Box>
                       {recommendation.improvements.map((item, idx) => (
-                        <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                          <CheckCircle size={16} color="#4FD1FF" sx={{ mt: 0.25, flexShrink: 0 }} />
-                          <Typography variant="body2" sx={{ color: '#9AA4B2' }}>{item}</Typography>
+                        <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'flex-start' }}>
+                          <Box sx={{ mt: 0.25, flexShrink: 0, display: 'flex' }}>
+                            <CheckCircle size={16} color="#4FD1FF" />
+                          </Box>
+                          <Typography variant="body2" sx={{ color: '#9AA4B2' }}>
+                            {typeof item === 'object' ? (item.recommendation ? `${item.area ? item.area + ': ' : ''}${item.recommendation}` : JSON.stringify(item)) : String(item)}
+                          </Typography>
                         </Box>
                       ))}
                     </CardContent>
@@ -248,7 +274,7 @@ const ActivityDetail = () => {
                 </Grid2>
               )}
 
-              {recommendation.suggestions?.length > 0 && (
+              {Array.isArray(recommendation.suggestions) && recommendation.suggestions.length > 0 && (
                 <Grid2 size={{ xs: 12, md: 6 }}>
                   <Card variant="outlined" sx={{ borderColor: 'rgba(124, 255, 79, 0.2)', backgroundColor: 'rgba(124, 255, 79, 0.03)' }}>
                     <CardContent>
@@ -259,9 +285,13 @@ const ActivityDetail = () => {
                         </Typography>
                       </Box>
                       {recommendation.suggestions.map((item, idx) => (
-                        <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                          <CheckCircle size={16} color="#7CFF4F" sx={{ mt: 0.25, flexShrink: 0 }} />
-                          <Typography variant="body2" sx={{ color: '#9AA4B2' }}>{item}</Typography>
+                        <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'flex-start' }}>
+                          <Box sx={{ mt: 0.25, flexShrink: 0, display: 'flex' }}>
+                            <CheckCircle size={16} color="#7CFF4F" />
+                          </Box>
+                          <Typography variant="body2" sx={{ color: '#9AA4B2' }}>
+                            {typeof item === 'object' ? (item.description ? `${item.workout ? item.workout + ': ' : ''}${item.description}` : JSON.stringify(item)) : String(item)}
+                          </Typography>
                         </Box>
                       ))}
                     </CardContent>
@@ -269,7 +299,7 @@ const ActivityDetail = () => {
                 </Grid2>
               )}
 
-              {recommendation.safety?.length > 0 && (
+              {Array.isArray(recommendation.safety) && recommendation.safety.length > 0 && (
                 <Grid2 size={{ xs: 12 }}>
                   <Card variant="outlined" sx={{ borderColor: 'rgba(255, 184, 77, 0.2)', backgroundColor: 'rgba(255, 184, 77, 0.03)' }}>
                     <CardContent>
@@ -283,8 +313,12 @@ const ActivityDetail = () => {
                         {recommendation.safety.map((item, idx) => (
                           <Grid2 size={{ xs: 12, sm: 6, md: 4 }} key={idx}>
                             <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                              <CheckCircle size={16} color="#FFB84D" sx={{ mt: 0.25, flexShrink: 0 }} />
-                              <Typography variant="body2" sx={{ color: '#9AA4B2' }}>{item}</Typography>
+                              <Box sx={{ mt: 0.25, flexShrink: 0, display: 'flex' }}>
+                                <CheckCircle size={16} color="#FFB84D" />
+                              </Box>
+                              <Typography variant="body2" sx={{ color: '#9AA4B2' }}>
+                                {typeof item === 'object' ? (item.text || JSON.stringify(item)) : String(item)}
+                              </Typography>
                             </Box>
                           </Grid2>
                         ))}

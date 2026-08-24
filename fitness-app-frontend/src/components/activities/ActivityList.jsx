@@ -15,8 +15,9 @@ const ActivityList = ({ onActivitiesLoaded, refreshKey, onDelete }) => {
       setLoading(true);
       setError(null);
       const response = await getActivities();
-      setActivities(response.data || []);
-      onActivitiesLoaded?.(response.data || []);
+      const list = Array.isArray(response.data) ? response.data : [];
+      setActivities(list);
+      onActivitiesLoaded?.(list);
     } catch (err) {
       setError(err);
       console.error(err);

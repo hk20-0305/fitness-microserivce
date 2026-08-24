@@ -2,14 +2,27 @@ import { Card, CardContent, Typography, Box, Grid2 } from '@mui/material';
 import { Sparkles, CheckCircle, Lightbulb, Shield, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
+const renderSafeText = (val) => {
+  if (val == null) return '';
+  if (typeof val === 'string' || typeof val === 'number') return String(val);
+  if (typeof val === 'object') {
+    if (val.recommendation) return val.area ? `${val.area}: ${val.recommendation}` : val.recommendation;
+    if (val.description) return val.workout ? `${val.workout}: ${val.description}` : val.description;
+    if (val.text) return val.text;
+    if (val.overall) return `Overall: ${val.overall}`;
+    return JSON.stringify(val);
+  }
+  return String(val);
+};
+
 const RecommendationCard = ({ recommendation }) => {
   const navigate = useNavigate();
 
   if (!recommendation) return null;
 
-  const improvements = recommendation.improvements || [];
-  const suggestions = recommendation.suggestions || [];
-  const safety = recommendation.safety || [];
+  const improvements = Array.isArray(recommendation.improvements) ? recommendation.improvements : [];
+  const suggestions = Array.isArray(recommendation.suggestions) ? recommendation.suggestions : [];
+  const safety = Array.isArray(recommendation.safety) ? recommendation.safety : [];
 
   return (
     <Card
@@ -50,7 +63,7 @@ const RecommendationCard = ({ recommendation }) => {
 
         {recommendation.recommendation && (
           <Typography variant="body2" sx={{ color: '#FFFFFF', lineHeight: 1.6, mb: 2 }}>
-            {recommendation.recommendation}
+            {renderSafeText(recommendation.recommendation)}
           </Typography>
         )}
 
@@ -66,9 +79,11 @@ const RecommendationCard = ({ recommendation }) => {
                     </Typography>
                   </Box>
                   {improvements.slice(0, 3).map((item, idx) => (
-                    <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-                      <CheckCircle size={14} color="#4FD1FF" sx={{ mt: 0.25, flexShrink: 0 }} />
-                      <Typography variant="body2" sx={{ color: '#9AA4B2' }}>{item}</Typography>
+                    <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 0.5, alignItems: 'flex-start' }}>
+                      <Box sx={{ mt: 0.25, flexShrink: 0, display: 'flex' }}>
+                        <CheckCircle size={14} color="#4FD1FF" />
+                      </Box>
+                      <Typography variant="body2" sx={{ color: '#9AA4B2' }}>{renderSafeText(item)}</Typography>
                     </Box>
                   ))}
                 </Box>
@@ -85,9 +100,11 @@ const RecommendationCard = ({ recommendation }) => {
                     </Typography>
                   </Box>
                   {suggestions.slice(0, 3).map((item, idx) => (
-                    <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-                      <CheckCircle size={14} color="#7CFF4F" sx={{ mt: 0.25, flexShrink: 0 }} />
-                      <Typography variant="body2" sx={{ color: '#9AA4B2' }}>{item}</Typography>
+                    <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 0.5, alignItems: 'flex-start' }}>
+                      <Box sx={{ mt: 0.25, flexShrink: 0, display: 'flex' }}>
+                        <CheckCircle size={14} color="#7CFF4F" />
+                      </Box>
+                      <Typography variant="body2" sx={{ color: '#9AA4B2' }}>{renderSafeText(item)}</Typography>
                     </Box>
                   ))}
                 </Box>
@@ -104,9 +121,11 @@ const RecommendationCard = ({ recommendation }) => {
                     </Typography>
                   </Box>
                   {safety.slice(0, 3).map((item, idx) => (
-                    <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-                      <CheckCircle size={14} color="#FFB84D" sx={{ mt: 0.25, flexShrink: 0 }} />
-                      <Typography variant="body2" sx={{ color: '#9AA4B2' }}>{item}</Typography>
+                    <Box key={idx} sx={{ display: 'flex', gap: 1, mb: 0.5, alignItems: 'flex-start' }}>
+                      <Box sx={{ mt: 0.25, flexShrink: 0, display: 'flex' }}>
+                        <CheckCircle size={14} color="#FFB84D" />
+                      </Box>
+                      <Typography variant="body2" sx={{ color: '#9AA4B2' }}>{renderSafeText(item)}</Typography>
                     </Box>
                   ))}
                 </Box>

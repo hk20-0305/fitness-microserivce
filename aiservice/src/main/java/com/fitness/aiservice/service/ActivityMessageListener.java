@@ -18,12 +18,20 @@ public class ActivityMessageListener {
 
     @RabbitListener(queues = "${rabbitmq.queue.name:activity.queue}")
     public void processActivity(Activity activity) {
-        log.info("Received activity for processing: {}", activity.getId());
-        Recommendation recommendation =
-                aiService.generateRecommendation(activity);
+        if (activity == null || activity.getUserId() == null || activity.getUserId().isBlank()) {
+            log.warn("Discarding invalid activity message: {}", activity);
+            return;
+        }
 
-        log.info("Generated Recommendation: {}", recommendation);
-
-        recommendationRepository.save(recommendation);
+        log.info("Received activity for processing: id={}, userId={}", activity.getId(), activity.getUserId());
+        try {
+            Recommendation recommendation = aiService.generateRecommendation(activity);
+            log.info("Generated Recommendation: id={}, activityId={}, userId={}", 
+                    recommendation.getId(), recommendation.getActivityId(), recommendation.getUserId());
+            recommendationRepository.save(recommendation);
+        } catch (Exception e) {
+            log.error("Failed to process activity and generate recommendation for activityId: {}", activity.getId(), e);
+        }
     }
 }
+

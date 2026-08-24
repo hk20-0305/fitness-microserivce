@@ -23,4 +23,8 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
+      defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
+
+# JWT — production MUST set JWT_SECRET env var (no fallback — prevents accidental dev secret use in prod)
+jwt:
+  secret: ${JWT_SECRET}

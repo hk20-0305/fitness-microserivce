@@ -14,7 +14,7 @@ const DashboardPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [recommendation, setRecommendation] = useState(null);
   const user = useSelector((state) => state.auth.user);
-  const userId = user?.sub;
+  const userId = user?.id || user?.userId || user?.sub;
 
   const handleActivitiesLoaded = useCallback((loaded) => {
     setActivities(loaded || []);

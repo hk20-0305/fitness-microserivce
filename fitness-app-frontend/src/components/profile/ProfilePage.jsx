@@ -19,11 +19,11 @@ const ProfilePage = () => {
     );
   }
 
-  const displayName = user.name || user.preferred_username || 'User';
-  const firstName = user.given_name || '';
-  const lastName = user.family_name || '';
+  const firstName = user.firstName || user.given_name || '';
+  const lastName = user.lastName || user.family_name || '';
+  const displayName = `${firstName} ${lastName}`.trim() || user.name || user.email?.split('@')[0] || 'User';
   const email = user.email || '';
-  const subject = user.sub || userId || '';
+  const subject = user.id || user.userId || userId || '';
 
   const profileItems = [
     {

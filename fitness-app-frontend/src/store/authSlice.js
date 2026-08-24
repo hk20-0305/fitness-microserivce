@@ -1,10 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit'
-
-const defaultUser = {
-  name: 'Fitness User',
-  email: 'user@fitness.com',
-  sub: 'user-default-1'
-};
+import { createSlice } from '@reduxjs/toolkit';
 
 const savedUser = JSON.parse(localStorage.getItem('user') || 'null');
 const savedUserId = localStorage.getItem('userId');
@@ -12,26 +6,34 @@ const savedUserId = localStorage.getItem('userId');
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
-    user: savedUser || defaultUser,
+    user: savedUser,
     token: localStorage.getItem('token') || null,
-    userId: savedUserId || (savedUser ? savedUser.sub : defaultUser.sub)
+    userId: savedUserId || (savedUser ? (savedUser.id || savedUser.userId) : null)
   },
   reducers: {
     setCredentials: (state, action) => {
-      state.user = action.payload.user;
-      state.token = action.payload.token || null;
-      state.userId = action.payload.user?.sub || action.payload.userId || defaultUser.sub;
+      const user = action.payload.user;
+      const token = action.payload.token || null;
+      const userId = user?.id || user?.userId || action.payload.userId || null;
 
-      if (action.payload.token) {
-        localStorage.setItem('token', action.payload.token);
+      state.user = user;
+      state.token = token;
+      state.userId = userId;
+
+      if (token) {
+        localStorage.setItem('token', token);
       }
-      localStorage.setItem('user', JSON.stringify(state.user));
-      localStorage.setItem('userId', state.userId);
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+      if (userId) {
+        localStorage.setItem('userId', userId);
+      }
     },
     logout: (state) => {
-      state.user = defaultUser;
+      state.user = null;
       state.token = null;
-      state.userId = defaultUser.sub;
+      state.userId = null;
       
       localStorage.removeItem('token');
       localStorage.removeItem('user');

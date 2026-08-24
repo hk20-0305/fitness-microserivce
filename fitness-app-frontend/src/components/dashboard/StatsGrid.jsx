@@ -2,11 +2,12 @@ import { Grid2 } from '@mui/material';
 import StatCard from './StatCard';
 
 const StatsGrid = ({ activities }) => {
-  const totalActivities = activities?.length || 0;
+  const activitiesList = Array.isArray(activities) ? activities : [];
+  const totalActivities = activitiesList.length;
   
-  const totalCalories = activities?.reduce((sum, a) => sum + (Number(a.caloriesBurned) || 0), 0) || 0;
+  const totalCalories = activitiesList.reduce((sum, a) => sum + (Number(a?.caloriesBurned) || 0), 0);
   
-  const totalDuration = activities?.reduce((sum, a) => sum + (Number(a.duration) || 0), 0) || 0;
+  const totalDuration = activitiesList.reduce((sum, a) => sum + (Number(a?.duration) || 0), 0);
 
   const stats = [
     {

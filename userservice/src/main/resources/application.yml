@@ -2,4 +2,11 @@ spring:
   application:
     name: user-service
   config:
-    import: configserver:${CONFIG_SERVER_URL:https://fitness-microserivce-1.onrender.com}
+    import: configserver:${CONFIG_SERVER_URL:https://fitness-microserivce-1.onrender.com}
+
+# JWT configuration
+# In production: set the JWT_SECRET environment variable to a strong random secret (>=32 bytes).
+# The fallback value below is for LOCAL DEVELOPMENT ONLY — do not use in production.
+jwt:
+  secret: "${JWT_SECRET:0123456789abcdef0123456789abcdef}"
+  expirationSeconds: 3600

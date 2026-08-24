@@ -31,3 +31,18 @@ eureka:
     service-url:
       defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
 
+# JWT — must match the same secret used by User Service.
+# In production: set the JWT_SECRET environment variable on ALL services.
+# The fallback below is for LOCAL DEVELOPMENT ONLY.
+jwt:
+  secret: "${JWT_SECRET:0123456789abcdef0123456789abcdef}"
+
+# Actuator — expose /actuator/health for Render health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

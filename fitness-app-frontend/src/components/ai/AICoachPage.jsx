@@ -10,7 +10,7 @@ const AICoachPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const user = useSelector((state) => state.auth.user);
-  const userId = user?.sub;
+  const userId = user?.id || user?.userId || user?.sub;
 
   const fetchRecommendations = useCallback(async () => {
     if (!userId) return;
