@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ai-service
+    name: AI-SERVICE
   config:
     import: configserver:${CONFIG_SERVER_URL:https://fitness-microserivce-1.onrender.com}
 
