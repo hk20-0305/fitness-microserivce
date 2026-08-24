@@ -35,7 +35,7 @@ eureka:
 # In production: set the JWT_SECRET environment variable on ALL services.
 # The fallback below is for LOCAL DEVELOPMENT ONLY.
 jwt:
-  secret: "${JWT_SECRET:0123456789abcdef0123456789abcdef}"
+  secret: "${JWT_SECRET}"
 
 # Actuator — expose /actuator/health for Render health checks
 management:
