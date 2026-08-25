@@ -21,13 +21,11 @@ eureka:
     prefer-ip-address: false
     hostname: ${RENDER_EXTERNAL_HOSTNAME}
 
-    instance-id: ${spring.application.name}:${RENDER_EXTERNAL_HOSTNAME}:443
+    instance-id: ${spring.application.name}:${RENDER_EXTERNAL_HOSTNAME}
 
     secure-port: 443
     secure-port-enabled: true
-
     non-secure-port-enabled: false
-    non-secure-port: 80
 
     home-page-url: https://${RENDER_EXTERNAL_HOSTNAME}/
     status-page-url: https://${RENDER_EXTERNAL_HOSTNAME}/actuator/health
@@ -50,7 +48,6 @@ gemini:
     url: ${GEMINI_API_URL}
     key: ${GEMINI_API_KEY}
 
-# Actuator — expose only /actuator/health for public health checks
 management:
   endpoints:
     web:
@@ -59,5 +56,3 @@ management:
   endpoint:
     health:
       show-details: never
-
-
