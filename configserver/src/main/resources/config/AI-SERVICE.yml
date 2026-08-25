@@ -20,16 +20,22 @@ eureka:
   instance:
     prefer-ip-address: false
     hostname: ${RENDER_EXTERNAL_HOSTNAME}
-    secure-port-enabled: true
-    non-secure-port-enabled: false
+
+    instance-id: ${spring.application.name}:${RENDER_EXTERNAL_HOSTNAME}:443
+
     secure-port: 443
+    secure-port-enabled: true
+
+    non-secure-port-enabled: false
+    non-secure-port: 80
+
     home-page-url: https://${RENDER_EXTERNAL_HOSTNAME}/
     status-page-url: https://${RENDER_EXTERNAL_HOSTNAME}/actuator/health
     health-check-url: https://${RENDER_EXTERNAL_HOSTNAME}/actuator/health
 
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
+      defaultZone: https://fitness-microserivce.onrender.com/eureka/
 
 rabbitmq:
   exchange:
