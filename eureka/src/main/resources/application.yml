@@ -10,8 +10,13 @@ eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:https://fitness-microserivce.onrender.com/eureka/}
 
-# Actuator — expose only /actuator/health for public health checks
+  instance:
+    hostname: ${RENDER_EXTERNAL_HOSTNAME:localhost}
+    prefer-ip-address: false
+
 management:
   endpoints:
     web:
@@ -19,4 +24,4 @@ management:
         include: health
   endpoint:
     health:
-      show-details: never
+      show-details: never
