@@ -18,10 +18,14 @@ server:
 
 eureka:
   instance:
-    hostname: ${RENDER_EXTERNAL_HOSTNAME:fitness-microserivce-4.onrender.com}
+    prefer-ip-address: false
+    hostname: ${RENDER_EXTERNAL_HOSTNAME}
     secure-port-enabled: true
     non-secure-port-enabled: false
     secure-port: 443
+    home-page-url: https://${RENDER_EXTERNAL_HOSTNAME}/
+    status-page-url: https://${RENDER_EXTERNAL_HOSTNAME}/actuator/info
+    health-check-url: https://${RENDER_EXTERNAL_HOSTNAME}/actuator/health
 
   client:
     service-url:
