@@ -1,19 +1,22 @@
 package com.fitness.aiservice.service;
 
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class GeminiService {
 
-    private static final int MAX_ATTEMPTS = 5;
-    private static final long[] BACKOFF_DELAYS_MS = {2000L, 5000L, 10000L, 20000L};
+   private static final int MAX_ATTEMPTS = 3;
+   private static final long[] BACKOFF_DELAYS_MS = {2000L, 5000L};
+   private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
 
     private final WebClient webClient;
 
@@ -46,6 +49,7 @@ public class GeminiService {
                         .bodyValue(requestBody)
                         .retrieve()
                         .bodyToMono(String.class)
+                        .timeout(REQUEST_TIMEOUT)
                         .block();
 
                 log.info("Gemini API call succeeded on attempt {}/{}", attempt, MAX_ATTEMPTS);
